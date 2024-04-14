@@ -64,6 +64,7 @@ testpics/
 *.bat
 *.ps1
 *.txt
+*.ORIGINAL
 
 # AGI Game Files
 *DIR
