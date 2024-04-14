@@ -50,3 +50,26 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# Project specific
+build/
+.vscode/
+AGI_Specifications/
+obj/
+testpics/
+.clang-format
+*.py
+*.gif
+*.json
+*.bat
+*.ps1
+*.txt
+
+# AGI Game Files
+*DIR
+*.agl
+WORDS.TOK
+VOL.*
+OBJECT
+
+
