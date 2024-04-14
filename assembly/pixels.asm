@@ -72,7 +72,7 @@ color_table:
     ; Add 0x9800 to the VERA::ADDR
     lda VERA::ADDR + 1
     clc
-    adc #$96
+    adc #$80
     sta VERA::ADDR + 1
     lda VERA::ADDR + 2
     adc #$00
@@ -92,13 +92,11 @@ color_table:
 ; Returns color at x, y from the visual screen in A register
 .export _asm_get_vis_pixel
 .proc _asm_get_vis_pixel
-    STATUSBAR_OFFSET = 8   ; TODO: get this from the C code?
     ; Define temporary storage locations and labels
     X_VAL           = $B0
     Y_VAL           = $B1
-    ; Add STATUSBAR_OFFSET to y (Y_VAL is in A register)
-    clc
-    adc #STATUSBAR_OFFSET
+
+    ; Y_VAL is in A register
     sta Y_VAL
 
     ; Get parameters from the C stack
@@ -119,13 +117,11 @@ color_table:
 ; Returns color at x, y from the priority screen in A register
 .export _asm_get_pri_pixel
 .proc _asm_get_pri_pixel
-    STATUSBAR_OFFSET = 8   ; TODO: get this from the C code?
     ; Define temporary storage locations and labels
     X_VAL           = $B0
     Y_VAL           = $B1
-    ; Add STATUSBAR_OFFSET to y (Y_VAL is in A register)
-    clc
-    adc #STATUSBAR_OFFSET
+
+    ; Y_VAL is in A register
     sta Y_VAL
 
     ; Get parameters from the C stack
@@ -138,7 +134,7 @@ color_table:
     ; Add 0x9600 to the VERA::ADDR
     lda VERA::ADDR + 1
     clc
-    adc #$96
+    adc #$80
     sta VERA::ADDR + 1
     lda VERA::ADDR + 2
     adc #$00
@@ -187,8 +183,6 @@ color_table:
 .import _vis_colour, _pri_colour, _vis_enabled, _pri_enabled
 .export _asm_drawline
 .proc _asm_drawline
-    STATUSBAR_OFFSET = 8   ; TODO: get this from the C code?
-
     ; Define temporary storage locations and labels
     ZP_BASE         = $C0
     Y1_VAL          = ZP_BASE
@@ -328,11 +322,7 @@ loop_start:
     lda X1_HIGH
     rol
     sta X_HIGH_TEMP
-    lda Y1_VAL
-    clc
-    adc #STATUSBAR_OFFSET
-    sta Y_VAL_TEMP
-    calc_vram_addr X_LOW_TEMP, X_HIGH_TEMP, Y_VAL_TEMP
+    calc_vram_addr X_LOW_TEMP, X_HIGH_TEMP, Y1_VAL
     ldy _vis_colour
     lda color_table,y
     sta VERA::DATA0         ; Write the color to VRAM
@@ -352,15 +342,11 @@ skip_vis:
     lda X1_HIGH
     rol
     sta X_HIGH_TEMP
-    lda Y1_VAL
-    clc
-    adc #STATUSBAR_OFFSET
-    sta Y_VAL_TEMP
-    calc_vram_addr X_LOW_TEMP, X_HIGH_TEMP, Y_VAL_TEMP
+    calc_vram_addr X_LOW_TEMP, X_HIGH_TEMP, Y1_VAL
     ; Add 0x9800 to the VERA::ADDR
     lda VERA::ADDR + 1
     clc
-    adc #$96
+    adc #$80
     sta VERA::ADDR + 1
     lda VERA::ADDR + 2
     adc #$00

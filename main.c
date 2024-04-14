@@ -51,7 +51,6 @@ fixes:
 // Program data gets up to ~38k of main memory (current size is 20k approx.)
 
 #include "asm.h"
-#include "bank.h"
 #include "cx16api.h"
 #include "dprint.h"
 #include "interp.h"
@@ -72,9 +71,10 @@ int main()
     volatile uint8_t* gif_recorder = (uint8_t*)0x9fb5;
 
     dprintf("\nReading files...");
-    init_resources();
 
+    init_resources();
     printf("\nLoading please wait...");
+    
     interp_init();
 
     // Initialize the screen
@@ -83,15 +83,15 @@ int main()
     // Initialize the PSG
     psg_init();
 
-    load_resource(PICTURE, 34);
+    load_resource(picdir, 34);
     // load_file("testpics/test.pic", PICTURE_BANK);
 
-    //load_resource(SOUND, 60);
+    // load_resource(snddir, 39);
     // load_resource(PICTURE, 2);
     // sound = create_sound(0);
 
     // while (!kbhit()) {
-    //     // play_sound(sound);
+    //     play_sound(sound);
     // }
 
     // Turn off all voices by setting volumes to 0
@@ -102,6 +102,7 @@ int main()
     start_stopwatch();
     draw_pic();
     end_stopwatch();
+    show_pic();
 
     display_text(0,0,"1234567890. The quick brown fox jumps over the lazy dog.");
 

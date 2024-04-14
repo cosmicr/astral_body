@@ -4,7 +4,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#define DEBUG
+//#define DEBUG
 
 #ifdef DEBUG
 #define dprintf(format) printf(format)

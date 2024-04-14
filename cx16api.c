@@ -1,5 +1,5 @@
+#include <cx16.h>
 #include "cx16api.h"
-#include "bank.h"
 
 /*
     Get the next character in the keyboard queue without removing it,

@@ -17,16 +17,13 @@ char lines[MAX_LINES][MAX_LINE_LENGTH + 1]; // Static allocation
 /*
     Processes the format specifiers in the text string and returns a new string
 */
-/*
-    Processes the format specifiers in the text string and populates the lines array
-*/
 char *process_text(const char* text)
 {
-    static uint8_t i = 0;
-    static uint8_t num_buffer = 0;
-    static uint8_t line_index = 0;
-    static uint8_t char_index = 0;
-    static char c;
+    register uint8_t i = 0;
+    register uint8_t num_buffer = 0;
+    register uint8_t line_index = 0;
+    register uint8_t char_index = 0;
+    register char c;
     dprintf("\nProcessing text");
 
     do {
@@ -41,23 +38,23 @@ char *process_text(const char* text)
             switch (mode) {
             case 'v': {
                 char buf[8];
-                int pad = 0;
+                uint8_t pad = 0;
                 if (c == '|') {
                     while (isdigit(c = text[i++])) {
                         pad = (pad * 10) + (c - '0');
                     }
                 }
                 sprintf(buf, "%0*d", pad, game.vars[num_buffer]);
-                strcat(lines[line_index] + char_index, buf);
+                strncpy(lines[line_index] + char_index, buf, strlen(buf));
                 char_index += strlen(buf);
                 break;
             }
             case 's':
-                strcat(lines[line_index] + char_index, game.strings[num_buffer]);
+                strncpy(lines[line_index] + char_index, game.strings[num_buffer], strlen(game.strings[num_buffer]));
                 char_index += strlen(game.strings[num_buffer]);
                 break;
             case 'm':
-                strcat(lines[line_index] + char_index, get_message(num_buffer));
+                strncpy(lines[line_index] + char_index, get_message(num_buffer), strlen(get_message(num_buffer)));
                 char_index += strlen(get_message(num_buffer));
                 break;
             }
@@ -75,7 +72,7 @@ char *process_text(const char* text)
             lines[line_index][char_index++] = c;
             break;
         }
-    } while (c != '\0' && line_index < MAX_LINES);
+    } while (c && line_index < MAX_LINES);
 
     if (char_index > 0) {
         lines[line_index][char_index] = '\0';
@@ -86,10 +83,10 @@ char *process_text(const char* text)
 
 void display_text(uint8_t x, uint8_t y, const char* str)
 {
-    uint8_t line_count = 0, start_x, start_y;
-    uint8_t width = 0, len = 0;
+    register uint8_t line_count = 0, start_x, start_y;
+    register uint8_t width = 0, len = 0;
     const char *word_start = str, *str_end = str + strlen(str);
-    uint8_t i, line_len = 0;
+    register uint8_t i, line_len = 0;
 
     // Split the text into lines
     while (word_start < str_end && line_count < MAX_LINES) {
@@ -107,7 +104,7 @@ void display_text(uint8_t x, uint8_t y, const char* str)
                 break;
         }
         if (line_len + len <= MAX_LINE_LENGTH) {
-            memcpy(lines[line_count] + line_len, word_start, len);
+            strncpy(lines[line_count] + line_len, word_start, len);
             line_len += len;
             if (word_end < str_end)
                 lines[line_count][line_len++] = ' '; // Add space if not the end
@@ -124,20 +121,16 @@ void display_text(uint8_t x, uint8_t y, const char* str)
     // max text box is 32x21 (with 2 each side, and 1 top/bottom included)
     // print the text (cputc uses petscii hex value)
     // center the text on the tile grid:
-    // start_x = (40 / 2 - width / 2) - 1;
-    // start_y = 20 / 2 - line_count / 2;
-    // using bitshifting:
     start_x = 20 - (width >> 1) - 1;
     start_y = 10 - (line_count >> 1);
 
     gotoxy(0, 1);
 
     // create a mask
-    // create_black_mask((start_x * 8) + 8, start_y * 8, width * 8, line_count * 8);
     create_black_mask((start_x << 3) + 8, start_y << 3, width << 3, line_count << 3);
     bgcolor(0x0F);
     textcolor(0x00);
-    for (i = 0; i < line_count; i++) {
+    for (i = 0; i < line_count; ++i) {
         gotoxy(start_x, start_y + i);
         textcolor(0x04);
         cputc(0x7D); // side border
@@ -148,7 +141,7 @@ void display_text(uint8_t x, uint8_t y, const char* str)
     }
     // print the border
     textcolor(0x04);
-    for (i = 1; i <= width; i++) {
+    for (i = 1; i <= width; ++i) {
         gotoxy(start_x + i, start_y - 1);
         cputc(0x60); // top border
         gotoxy(start_x + i, start_y + line_count);
@@ -165,8 +158,6 @@ void display_text(uint8_t x, uint8_t y, const char* str)
     }
     cgetc();
 
-    // free the memory
-    free(lines);
     // clear the sprite masks
     clear_sprite_masks();
 }

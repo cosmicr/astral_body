@@ -17,20 +17,17 @@ void init_screen()
     asm_clear_vis_color(15);
     asm_clear_pri_color(4);
 
-    // todo: there is a single line due to scaling at the bottom of the vis screen
-    // clear pixels at the top of the screen
-    for (i = 0; i < 8; i++)
-        asm_plot_vis_hline(0, 320, i, 0);
-
-    // clear pixels at the bottom of the screen
-    for (i = 176; i < 201; i++)
-        asm_plot_vis_hline(0, 320, i, 0);
+    // set bounding lines
+    asm_plot_vis_hline(0, 320, 168, 0);
+    asm_plot_vis_hline(0, 320, 200, 0);
+    asm_plot_pri_hline(0, 320, 168, 0);
 
     gotoxy(0, 22);
     bgcolor(0x00);
     textcolor(0x0f);
 
     create_black_bitmap(); // for masking behind text
+    asm_clear_screen();
 }
 
 void setup_ega_palette()
@@ -103,7 +100,7 @@ void create_black_sprite(uint16_t x, uint8_t y, uint8_t width, uint8_t height)
     VERA.address_hi = (sprite_attr_offset >> 16) & 0xFF;
     VERA.address_hi |= 0x10; // Set auto-increment
 
-    VERA.data0 = (SPRITE_BITMAP_DATA >> 5) & 0xFF;           // 0: Address bits 12:5
+    VERA.data0 = (SPRITE_BITMAP_DATA >> 5) & 0x00FF;         // 0: Address bits 12:5
     VERA.data0 = 0x00 | ((SPRITE_BITMAP_DATA >> 13) & 0x0F); // 1: 4bpp mode, Address bits 16:13
     VERA.data0 = x;                                          // 2: X position
     VERA.data0 = x >> 8;                                     // 3: X position

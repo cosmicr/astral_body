@@ -75,7 +75,7 @@ void interp_init(void)
     // var 24 input length?
     game.vars[24] = 40;
     // var 8 free memory?
-    game.vars[8] = 0x10000; // 64k?
+    game.vars[8] = 0; // 64k?
 
     // var 22 sound type (tandy?)
     game.vars[22] = 3; // Tandy
@@ -88,7 +88,7 @@ void interp_init(void)
     game.cursor = '_';
 
     // load logic 0
-    load_resource(LOGIC, 0); 
+    load_resource(logdir, 0); 
 
     game.flags[5] = true; // new_room
 }
@@ -175,6 +175,7 @@ void interp_run(void)
             if (key == 17) {
                 game.vars[6] = 5;
             }
+            
         }
         // plot the keybuffer
         gotoxy(0, 22);

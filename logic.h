@@ -5,7 +5,6 @@
 */
 #include <stdint.h>
 #include <stdbool.h>
-#include "bank.h"
 #include "interp.h"
 
 extern uint8_t bank;

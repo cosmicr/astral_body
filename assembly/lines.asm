@@ -339,10 +339,10 @@ long_line:
     ; *** call the vram address calculation routine ***
     calc_vram_addr X0_LOW, X0_HIGH, Y0
 
-    ; Add 0x9800 to the VERA::ADDR ; TODO: use one hline function that takes a parameter for the offset
+    ; Add 0x8000 to the VERA::ADDR ; TODO: use one hline function that takes a parameter for the offset
     lda VERA::ADDR + 1
     clc
-    adc #$96
+    adc #$80
     sta VERA::ADDR + 1
     lda VERA::ADDR + 2
     adc #$00
@@ -402,10 +402,10 @@ long_line:
     ; *** call the vram address calculation routine ***
     calc_vram_addr X0_LOW, X0_HIGH, Y0
 
-    ; Add 0x9600 to the VERA::ADDR 
+    ; Add 0x8000 to the VERA::ADDR 
     lda VERA::ADDR + 1
     clc
-    adc #$96
+    adc #$80
     sta VERA::ADDR + 1
     lda VERA::ADDR + 2
     adc #$00

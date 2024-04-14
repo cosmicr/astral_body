@@ -8,12 +8,12 @@ uint8_t fill_stack_pointer = 0;
 */
 void push(uint8_t lx, uint8_t rx, uint8_t y)
 {
-    if (fill_stack_pointer < MAX_STACK_SIZE) {
+    //if (fill_stack_pointer < MAX_STACK_SIZE) {
         fill_stack[fill_stack_pointer].lx = lx;
         fill_stack[fill_stack_pointer].rx = rx;
         fill_stack[fill_stack_pointer].y = y;
         ++fill_stack_pointer;
-    }
+    //}
 }
 
 /*

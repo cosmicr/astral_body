@@ -17,8 +17,10 @@
     lda #VERA::BITMAP4BPP
     sta VERA::L0::CONFIG
 
-    ; Set layer 0 tilebase to $0000 in VRAM
-    stz VERA::L0::TILE_BASE
+    ; Set layer 0 tilebase to $12000 in VRAM (0x12000 / 2048 = 0x24), (0x24 << 2 = 0x90)
+    ; stz VERA::L0::TILE_BASE 
+    lda #$90
+    sta VERA::L0::TILE_BASE
 
     ; Set layer 1 to 256 color 1 bit tile mode
     ;lda #VERA::T256C | VERA::TILE1BPP |  VERA::MAP::WIDTH128 | VERA::MAP::HEIGHT64
@@ -42,11 +44,13 @@
 ; Clear VRAM using VERA's 32-bit cache feature
 .export _asm_clear_screen
 .proc _asm_clear_screen
-    ; Set the VERA address to 0x0000 (start of VRAM)
+    ; Set the VERA address to 0x12000 (start of VRAM)
     stz VERA::ADDR
-    stz VERA::ADDR + 1
-    stz VERA::ADDR + 0
-    
+    lda #$20
+    sta VERA::ADDR + 1
+    lda #$01
+    sta VERA::ADDR + 2
+
     ; Enable DCSEL mode 2 to allow cache operations
     lda #%00000100
     sta $9F25           ; VERA::CTRL
@@ -67,13 +71,14 @@
 
     ; Set address auto-increment to 4 bytes
     lda #%00110000      ; Mode 3 is a 4 byte increment
-    sta $9F22           ; VERA::ADDR + 2
+    ora VERA::ADDR + 2  
+    sta VERA::ADDR + 2  ; VERA::ADDR + 2
 
     ; Calculate loop count for 320x240 pixels in 4bpp mode (38400 bytes total)
     ; Since we are writing 4 bytes at a time, we need 38400/4 writes
     ; This will write 8 pixels at a time (32 bits)
-    ldx #$25            ; High byte of 9600
-    ldy #$80            ; Low byte of 9600
+    ldx #$20            ; High byte
+    ldy #$00            ; Low byte
 
     lda #%00000000      ; Set the mask (none in this case)
 
@@ -89,6 +94,9 @@ clear_loop:
     lda #%00000000      ; Disable cache writing
     sta $9F29           ; FX_CTRL
 
+    lda #%00000000      ; DCSEL = Mode 0
+    sta $9F25           ; VERA::CTRL
+
     rts                 ; Return from subroutine
 
 .endproc ; _asm_clear_screen
@@ -102,8 +110,8 @@ clear_loop:
     ; Set the starting VRAM address to 0x0000
     set_vram_addr #$00, #$00, #0, #VERA::INC1
 
-    ; Set up the loop counter to 38912 (nearest 2048 boundary to 320x240 / 2) ($9800)
-    ldx #$96           ; High byte of loop counter 
+    ; Set up the loop counter to 36768 bytes (320x240 pixels in 4bpp mode)
+    ldx #$80           ; High byte of loop counter 
     ldy #$00           ; Low byte of loop counter 
 
     ; Set the upper and lower 4 bits of the color
@@ -133,9 +141,9 @@ clear_loop:
     ; Set the starting VRAM address to $7D00
     set_vram_addr #$00, #SCREEN_SIZE, #0, #VERA::INC1
 
-    ; Set up the loop counter (writing 2 bytes at a time)
-    ldx #$96           ; High byte of loop counter 
-    ldy #$00           ; Low byte of loop counter 
+    ; Set up the loop counter to 160x167 pixels
+    ldx #$68           ; High byte of loop counter 
+    ldy #$60           ; Low byte of loop counter 
 
     ; Set the upper and lower 4 bits of the color
     lda color           ; Load the color

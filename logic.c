@@ -1,9 +1,9 @@
 #include <conio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <cx16.h>
 
 #include "asm.h"
-#include "bank.h"
 #include "interp.h"
 #include "logic.h"
 #include "logic_commands.h"
@@ -144,9 +144,11 @@ void (*command_functions[0xB7])(uint16_t* offset) = {command_00_return,
                                                      command_b6_adj_ego_move_to_x_y};
 
 // gets the next two bytes and then moves offset forward by that amount
+// TODO: Inline this!!!!!
 void advance(uint16_t* offset)
 {
-    uint16_t value = read_bank_data(bank, *offset) | (read_bank_data(bank, *offset + 1) << 8);
+    //uint16_t value = read_bank_data(bank, *offset) | (read_bank_data(bank, *offset + 1) << 8);
+    uint16_t value = read_heap(*offset) | (read_heap(*offset + 1) << 8);
     dprintf_args("\nadvance from offset: %X", *offset);
     *offset += value + 2;
     dprintf_args("\nskipping %d", value);
@@ -161,17 +163,10 @@ void print_opcode(uint8_t code, uint16_t offset, char* str)
 void execute_logic(uint8_t num)
 {
     static uint8_t code;
-    static uint16_t offset = 0;
+    uint16_t offset = get_offset(logdir_head, num);
 
-    if (num == 0) {
-        bank = LOGIC0_BANK;
-    } else {
-        bank = LOGIC_BANK;
-    }
-
-    RAM_BANK = bank;
-
-    messages_offset = read_bank_data(bank, offset) | (read_bank_data(bank, offset + 1) << 8);
+    //messages_offset = read_bank_data(bank, offset) | (read_bank_data(bank, offset + 1) << 8);
+    messages_offset = offset + (read_heap(offset) | (read_heap(offset + 1) << 8));
     messages_offset += 2;
     offset += 2;
 
@@ -179,7 +174,8 @@ void execute_logic(uint8_t num)
 
     // note: logic data does not have header or size - it starts straight away
     while (offset < messages_offset) {
-        code = read_bank_data(bank, offset);
+        //code = read_bank_data(bank, offset);
+        code = read_heap(offset);
         printf("\n(%d)%X: %X ", num, offset, code);
         if (code == 0xff) { // if
             execute_if(&offset);
@@ -222,7 +218,8 @@ void execute_if(uint16_t* offset)
     (*offset)++;
 
     while (true) {
-        code = read_bank_data(bank, *offset); // get test
+        //code = read_bank_data(bank, *offset); // get test
+        code = read_heap(*offset); // get test
         dprintf_args("\ncode is %X", code);
         if (code < 0xFC) // not a conditional
         {
@@ -284,7 +281,6 @@ char* get_message(uint8_t message_num)
 {
     uint8_t num_messages;
     uint16_t message_offset;
-    size_t message_length = 0;
     char* message = NULL;
     int i = 0;
     uint8_t c;
@@ -297,10 +293,12 @@ char* get_message(uint8_t message_num)
 
     message_num -= 1; // Decrement message number to account for 1-based indexing
 
-    message_offset = (read_bank_data(bank, message_num * 2 + messages_offset + 3) | (read_bank_data(bank, message_num * 2 + messages_offset + 4) << 8)) + messages_offset + 1;
+    //message_offset = (read_bank_data(bank, message_num * 2 + messages_offset + 3) | (read_bank_data(bank, message_num * 2 + messages_offset + 4) << 8)) + messages_offset + 1;
+    message_offset = (read_heap(message_num * 2 + messages_offset + 3) | (read_heap(message_num * 2 + messages_offset + 4) << 8)) + messages_offset + 1;
 
     // read characters into message until we hit a null terminator
-    while ((c = read_bank_data(bank, message_offset + i)) != 0) {
+    //while ((c = read_bank_data(bank, message_offset + i)) != 0) {
+    while ((c = read_heap(message_offset + i)) != 0) {
         char* temp = realloc(message, i + 2);
         if (temp == NULL) {
             free(message);
@@ -313,7 +311,7 @@ char* get_message(uint8_t message_num)
 
     if (message != NULL) {
         message[i] = '\0'; // Null terminate the string
-        printf("\nMessage: %s", message);
+        dprintf_args("\nMessage: %s", message);
     }
     else
     {
@@ -327,22 +325,22 @@ void decrypt_messages()
 {
     // Hard-coded array of ASCII hex values for "Avis Durgan"
     const char key[] = {0x41, 0x76, 0x69, 0x73, 0x20, 0x44, 0x75, 0x72, 0x67, 0x61, 0x6E, 0x00};
-    size_t key_len = strlen(key);
-    static uint16_t messages_size;
-    static uint16_t text_start;
+    size_t key_len = 11; // don't include 0x00 terminator
+    uint16_t messages_size;
+    uint16_t text_start;
     int i = 0;
 
-    messages_size = read_bank_data(bank, messages_offset + 1) | (read_bank_data(bank, messages_offset + 2) << 8);
-    // printf("\nMessages size is %X", messages_size);
+    //messages_size = read_bank_data(bank, messages_offset + 1) | (read_bank_data(bank, messages_offset + 2) << 8);
+    messages_size = read_heap(messages_offset + 1) | (read_heap(messages_offset + 2) << 8);
 
-    text_start = read_bank_data(bank, messages_offset + 3) | (read_bank_data(bank, messages_offset + 4) << 8);
-    // printf("\nText start is %X", text_start);
+    //text_start = read_bank_data(bank, messages_offset + 3) | (read_bank_data(bank, messages_offset + 4) << 8);
+    text_start = read_heap(messages_offset + 3) | (read_heap(messages_offset + 4) << 8);
     text_start += messages_offset + 1;
-    // printf("\nText start is %X", text_start);
 
     // Decrypt the text
     for (i = 0; i < messages_size; i++) {
-        uint8_t c = read_bank_data(bank, text_start + i);
+        //uint8_t c = read_bank_data(bank, text_start + i);
+        uint8_t c = read_heap(text_start + i);
         c ^= key[i % key_len];
 
         // invert the case of the petscii character
@@ -353,6 +351,7 @@ void decrypt_messages()
         }
 
         // set the new memory value to the decrypted value
-        write_bank_data(bank, text_start + i, c);
+        //write_bank_data(bank, text_start + i, c);
+        write_heap(text_start + i, c);
     }
 }

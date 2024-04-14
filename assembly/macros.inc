@@ -3,7 +3,7 @@
 C_STACK_ADDR = $22
 
 ; note: screen size is actually 160x200 ($7D00) bytes but we put some extra padding at the end
-SCREEN_SIZE = $7D
+SCREEN_SIZE = $80
 
 ; VERA register addresses
 FX_CTRL = $9F29

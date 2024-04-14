@@ -1,9 +1,10 @@
 #include <conio.h>
+#include <stdio.h>
 
 #include "asm.h"
-#include "bank.h"
 #include "picture.h"
 #include "pixel.h"
+#include "resource.h"
 #include "screen.h"
 #include "timer.h"
 
@@ -18,10 +19,11 @@ void (*pic_action[11])(uint16_t* offset) = {
 /*
     Gets the next picture action from the picture data
 */
-uint8_t get_next_pic_action(uint16_t data_offset)
-{
-    return read_bank_data(PICTURE_BANK, data_offset);
-}
+// uint8_t get_next_pic_action(uint16_t data_offset)
+// {
+//     return read_heap(data_offset);
+// }
+#define get_next_pic_action(data_offset) read_heap(data_offset)
 
 /*
     Draws the current picture starting at memory bank 1
@@ -29,10 +31,15 @@ uint8_t get_next_pic_action(uint16_t data_offset)
 void draw_pic(void)
 {
     static bool in_progress = true, waitForEach = false;
-    static uint16_t offset = 0;
+    uint16_t offset = get_last_entry(picdir_head)->offset;
     static uint8_t action;
 
-    action = get_next_pic_action(5);
+    // asm_clear_vis_color(15); // Clear the visual page
+    // asm_clear_pri_color(4); // Clear the priority page
+
+    asm("sei");
+
+    action = get_next_pic_action(offset);
 
     do {
         action = get_next_pic_action(offset++);
@@ -42,6 +49,25 @@ void draw_pic(void)
             break;
         }
 
+        // TODO: this is faster/smaller to do these inline
+        // if (action == 0xF0) {
+        //     vis_colour = get_next_pic_action(offset++);
+        //     vis_enabled = true;
+        // }
+
+        // if (action == 0xF1) {
+        //     vis_enabled = false;
+        // }
+
+        // if (action == 0xF2) {
+        //     pri_colour = get_next_pic_action(offset++);
+        //     pri_enabled = true;
+        // }
+
+        // if (action == 0xF3) {
+        //     pri_enabled = false;
+        // }
+
         pic_action[action & 0x0F](&offset);
 
         if (waitForEach) {
@@ -50,6 +76,26 @@ void draw_pic(void)
             cgetc();
         }
     } while (in_progress);
+
+    asm("cli");
+}
+
+void show_pic(void)
+{
+    static uint16_t i;
+    asm_clear_screen();
+
+    VERA.control = 1;                  // select data port 1
+    VERA.address = 0x2000 + (8 * 160); // low bytes of 0x12000 (plus status bar)
+    VERA.address_hi = 0x10 | 0x01;     // auto increment and high byte of 0x12000
+
+    VERA.control = 0;
+    VERA.address = 0;
+    VERA.address_hi = 0x10;
+
+    for (i = 0; i < 0x6900; i++) { // 160*168
+        VERA.data1 = VERA.data0;
+    }
 }
 
 /*

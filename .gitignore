@@ -65,6 +65,7 @@ testpics/
 *.ps1
 *.txt
 *.ORIGINAL
+*.bin
 
 # AGI Game Files
 *DIR

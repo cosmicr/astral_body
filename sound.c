@@ -1,12 +1,14 @@
-#include "sound.h"
+#include <stdlib.h>
+
 #include "asm.h"
-#include "bank.h"
 #include "cx16api.h"
+#include "resource.h"
+#include "sound.h"
 #include "timer.h"
 
 // Noise freq table
 const uint16_t noise_freq[] = {2230, 1115, 557};
-const uint8_t volumes[] = {63, 47, 31, 15, 0, 0 ,0, 0}; // Corresponding to attenuation values 1,2,4,8,15
+const uint8_t volumes[] = {63, 47, 31, 15, 0, 0, 0, 0}; // Corresponding to attenuation values 1,2,4,8,15
 /*
     1 = 2 (1 >> 1 = 0)
     2 = 4 (2 >> 1 = 1)
@@ -18,13 +20,16 @@ const uint8_t volumes[] = {63, 47, 31, 15, 0, 0 ,0, 0}; // Corresponding to atte
 Sound* create_sound(uint16_t bank_offset)
 {
     Sound* sound = malloc(sizeof(Sound));
-    sound->bank_offset = bank_offset;
+    sound->bank_offset = bank_offset; // TODO: this isn't right. It needs to save the bank offset for the sound data in the heap (32-bit)
 
-    RAM_BANK = SOUND_BANK;
-    sound->voice1_offset = read_bank_data(SOUND_BANK, bank_offset) | (read_bank_data(SOUND_BANK, bank_offset + 1) << 8);
-    sound->voice2_offset = read_bank_data(SOUND_BANK, bank_offset + 2) | (read_bank_data(SOUND_BANK, bank_offset + 3) << 8);
-    sound->voice3_offset = read_bank_data(SOUND_BANK, bank_offset + 4) | (read_bank_data(SOUND_BANK, bank_offset + 5) << 8);
-    sound->noise_offset = read_bank_data(SOUND_BANK, bank_offset + 6) | (read_bank_data(SOUND_BANK, bank_offset + 7) << 8);
+    // sound->voice1_offset = read_bank_data(SOUND_BANK, bank_offset) | (read_bank_data(SOUND_BANK, bank_offset + 1) << 8);
+    // sound->voice2_offset = read_bank_data(SOUND_BANK, bank_offset + 2) | (read_bank_data(SOUND_BANK, bank_offset + 3) << 8);
+    // sound->voice3_offset = read_bank_data(SOUND_BANK, bank_offset + 4) | (read_bank_data(SOUND_BANK, bank_offset + 5) << 8);
+    // sound->noise_offset = read_bank_data(SOUND_BANK, bank_offset + 6) | (read_bank_data(SOUND_BANK, bank_offset + 7) << 8);
+    sound->voice1_offset = read_heap(bank_offset) | (read_heap(bank_offset + 1) << 8);
+    sound->voice2_offset = read_heap(bank_offset + 2) | (read_heap(bank_offset + 3) << 8);
+    sound->voice3_offset = read_heap(bank_offset + 4) | (read_heap(bank_offset + 5) << 8);
+    sound->noise_offset = read_heap(bank_offset + 6) | (read_heap(bank_offset + 7) << 8);
     sound->voice1_duration = 0;
     sound->voice2_duration = 0;
     sound->voice3_duration = 0;
@@ -33,7 +38,7 @@ Sound* create_sound(uint16_t bank_offset)
     // Setup Noise channel
     psg_write(12 + 3, 0xFF);
 
-    printf("Sound: %4X %4X %4X %4X\n", sound->voice1_offset, sound->voice2_offset, sound->voice3_offset, sound->noise_offset);
+    //printf("Sound: %4X %4X %4X %4X\n", sound->voice1_offset, sound->voice2_offset, sound->voice3_offset, sound->noise_offset);
 
     return sound;
 }
@@ -49,7 +54,8 @@ void play_sound(Sound* sound)
     // Voice 1
     if (sound->voice1_duration <= 0) {
         for (i = 0; i < 5; i++) {
-            bytes[i] = read_bank_data(SOUND_BANK, sound->voice1_offset + i);
+            // bytes[i] = read_bank_data(SOUND_BANK, sound->voice1_offset + i);
+            bytes[i] = read_heap(sound->voice1_offset + i);
         }
         sound->voice1_duration = bytes[0] | (bytes[1] << 8);
         if (sound->voice1_duration != 0xFFFF) {
@@ -57,7 +63,7 @@ void play_sound(Sound* sound)
             frequency = (111860 / freq_divisor) + 1;
             volume = volumes[(bytes[4] & 0x0F) >> 1];
 
-            //printf("Voice 1: %lu %u %u\n", freq_divisor, sound->voice1_duration, volume);
+            // printf("Voice 1: %lu %u %u\n", freq_divisor, sound->voice1_duration, volume);
             psg_setfreq(frequency, 0);
             psg_setvol(volume, 0);
             sound->voice1_offset += 5;
@@ -69,7 +75,8 @@ void play_sound(Sound* sound)
     // Voice 2
     if (sound->voice2_duration <= 0) {
         for (i = 0; i < 5; i++) {
-            bytes[i] = read_bank_data(SOUND_BANK, sound->voice2_offset + i);
+            // bytes[i] = read_bank_data(SOUND_BANK, sound->voice2_offset + i);
+            bytes[i] = read_heap(sound->voice2_offset + i);
         }
         sound->voice2_duration = bytes[0] | (bytes[1] << 8);
         if (sound->voice2_duration != 0xFFFF) {
@@ -89,7 +96,8 @@ void play_sound(Sound* sound)
     // Voice 3
     if (sound->voice3_duration <= 0) {
         for (i = 0; i < 5; i++) {
-            bytes[i] = read_bank_data(SOUND_BANK, sound->voice3_offset + i);
+            // bytes[i] = read_bank_data(SOUND_BANK, sound->voice3_offset + i);
+            bytes[i] = read_heap(sound->voice3_offset + i);
         }
         sound->voice3_duration = bytes[0] | (bytes[1] << 8);
         if (sound->voice3_duration != 0xFFFF) {
@@ -109,7 +117,8 @@ void play_sound(Sound* sound)
     // Noise
     if (sound->noise_duration <= 0) {
         for (i = 0; i < 5; i++) {
-            bytes[i] = read_bank_data(SOUND_BANK, sound->noise_offset + i);
+            // bytes[i] = read_bank_data(SOUND_BANK, sound->noise_offset + i);
+            bytes[i] = read_heap(sound->noise_offset + i);
         }
         sound->noise_duration = bytes[0] | (bytes[1] << 8);
         if (sound->noise_duration != 0xFFFF) {

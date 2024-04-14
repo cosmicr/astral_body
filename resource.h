@@ -5,26 +5,34 @@
 */
 #include <stdint.h>
 
-#include "bank.h"
+extern uint32_t logdir;
+extern uint32_t picdir;
+extern uint32_t viewdir;
+extern uint32_t snddir;
 
-// todo: consider another data type (struct) for optimisation
-enum kind {
-    LOGIC = LOGDIR_BANK,
-    PICTURE = PICDIR_BANK,
-    VIEW = VIEWDIR_BANK,
-    SOUND = SNDDIR_BANK,
-    WORDS = WORDS_BANK,
-    OBJECT = OBJECT_BANK
-};
+extern uint32_t words_tok;
+extern uint32_t object;
 
-extern uint8_t last_logic_num;
-extern uint8_t last_pic_num;
-// todo: view loading management
+// Linked list to keep track off offset for each loaded resource
+typedef struct dir_entry {
+    uint8_t res_num;
+    uint32_t offset;
+    struct dir_entry* next;
+} dir_entry_t;
 
+extern dir_entry_t* logdir_head;
+extern dir_entry_t* picdir_head;
+extern dir_entry_t* viewdir_head;
+extern dir_entry_t* snddir_head;
+
+uint8_t read_heap(uint32_t offset);
+void write_heap(uint32_t offset, uint8_t data);
+uint32_t load_file(char* filename);
 void init_resources(void);
-
-void load_file(char* filename, uint8_t bank);
-
-void load_resource(enum kind dir, uint8_t num);
+void load_resource(uint32_t directory, uint8_t num);
+void unload_resource(uint32_t directory, uint8_t num);
+dir_entry_t* add_to_dirlist(dir_entry_t** head, uint32_t offset);
+uint32_t get_offset(dir_entry_t* head, uint8_t num);
+dir_entry_t* get_last_entry(dir_entry_t* head);
 
 #endif

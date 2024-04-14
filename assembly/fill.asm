@@ -12,37 +12,28 @@
 
 .import pusha, popa, pushax, popax, decsp2, incsp2
 .import _vis_colour, _pri_colour, _vis_enabled, _pri_enabled, _fill_stack_pointer
-.import _scan_and_fill, _push, _pop, _asm_get_vis_pixel, _asm_get_pri_pixel
-.import _asm_plot_vis_pixel, _asm_plot_pri_pixel
+; TODO: these could be converted to asm too
+.import _scan_and_fill, _push, _pop
 
 .macro can_fill x_val, y_val
 .scope
     ; registers X and Y contain pixel coordinates
     ; returns 0 in A register if the pixel cannot be filled (early exit)
     ; returns 1 in A register if the pixel can be filled
-
-    STATUSBAR_OFFSET = 8
-    NEW_Y = $90
     VIS_PIXEL = $91
     PRI_PIXEL = $92
 
-    ; add STATUSBAR_OFFSET to y_val
-    lda y_val
-    clc
-    adc #STATUSBAR_OFFSET
-    sta NEW_Y ; y_val + STATUSBAR_OFFSET
-
     ; get the vis pixel at the current x and y
-    calc_vram_addr_160 x_val, NEW_Y
+    calc_vram_addr_160 x_val, y_val
     lda VERA::DATA0
     and #$0F ; mask out the top 4 bits
     sta VIS_PIXEL
 
     ; get the pri pixel at the current x and y
-    ; Add 0x9600 to the VERA::ADDR
+    ; Add 0x8000 to the VERA::ADDR
     lda VERA::ADDR + 1
     clc
-    adc #$96
+    adc #$80
     sta VERA::ADDR + 1
     lda VERA::ADDR + 2
     adc #$00

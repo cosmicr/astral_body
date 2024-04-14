@@ -3,9 +3,9 @@
 /*
     Screen, palette and text related functions
 */
-#define STATUSBAR_OFFSET 8
+#define STATUSBAR_OFFSET 0
 
-#define SPRITE_BITMAP_DATA 0x13000
+#define SPRITE_BITMAP_DATA 0x10000
 
 extern uint32_t sprite_attr_offset;
 
