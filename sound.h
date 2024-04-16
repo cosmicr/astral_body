@@ -7,19 +7,19 @@
 
 // Structure to hold the offsets for each voice's data
 typedef struct {
-    uint16_t bank_offset;
-    uint16_t voice1_offset;
+    uint32_t offset;
+    uint32_t voice1_offset;
     int16_t voice1_duration;
-    uint16_t voice2_offset;
+    uint32_t voice2_offset;
     int16_t voice2_duration;
-    uint16_t voice3_offset;
+    uint32_t voice3_offset;
     int16_t voice3_duration;
-    uint16_t noise_offset;
+    uint32_t noise_offset;
     int16_t noise_duration;
 } Sound;
 
 // Function to init an AGI sound
-Sound *create_sound(uint16_t bank_offset);
+Sound *create_sound(uint32_t offset);
 
 // Function to play a sound
 void play_sound(Sound *sound);
