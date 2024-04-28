@@ -20,6 +20,10 @@ const uint8_t volumes[] = {63, 47, 31, 15, 0, 0, 0, 0}; // Corresponding to atte
 Sound* create_sound(uint32_t offset)
 {
     Sound* sound = malloc(sizeof(Sound));
+    if (sound == NULL) {
+        printf("Error: Unable to allocate memory for sound\n");
+        exit(1);
+    }
     sound->offset = offset;
 
     sound->voice1_offset = offset + (read_heap(offset) | (read_heap(offset + 1) << 8));
@@ -32,9 +36,9 @@ Sound* create_sound(uint32_t offset)
     sound->noise_duration = 0;
 
     // Setup Noise channel
-    psg_write(12 + 3, 0xFF);
+    psg_write(12 + 3, 0xFF); // 3 * 4 = 12(offset 3) waveform=0b11(3) and pulsewidth=0b111111(63)
 
-    printf("Sound: %4lX %4lX %4lX %4lX\n", sound->voice1_offset, sound->voice2_offset, sound->voice3_offset, sound->noise_offset);
+    printf("Offset %4lX Sound: %4X %4X %4X %4X\n", offset, sound->voice1_offset, sound->voice2_offset, sound->voice3_offset, sound->noise_offset);
 
     return sound;
 }
@@ -43,23 +47,22 @@ void play_sound(Sound* sound)
 {
     static uint32_t freq_divisor, frequency;
     static uint8_t volume, i;
-    static uint8_t bytes[5];
+    uint8_t bytes[5];
 
-    //printf("%u %u %u %u\n", sound->voice1_duration, sound->voice2_duration, sound->voice3_duration, sound->noise_duration);
+    // printf("%u %u %u %u\n", sound->voice1_duration, sound->voice2_duration, sound->voice3_duration, sound->noise_duration);
 
     // Voice 1
     if (sound->voice1_duration <= 0) {
         for (i = 0; i < 5; i++) {
             // bytes[i] = read_bank_data(SOUND_BANK, sound->voice1_offset + i);
-            bytes[i] = read_heap(sound->voice1_offset + (uint32_t)i);
+            bytes[i] = read_heap(sound->voice1_offset + i);
         }
         sound->voice1_duration = bytes[0] | (bytes[1] << 8);
         if (sound->voice1_duration != 0xFFFF) {
-            freq_divisor = ((bytes[2] & 0x3F) << 4) + (bytes[3] & 0x0F);
+            freq_divisor = ((bytes[2] & 0x3F) << 4) + (bytes[3] & 0x0F) & 0xFFFF;
             frequency = (111860 / freq_divisor) + 1;
             volume = volumes[(bytes[4] & 0x0F) >> 1];
 
-            //printf("Voice 1: %lu %u %u\n", freq_divisor, sound->voice1_duration, volume);
             psg_setfreq(frequency, 0);
             psg_setvol(volume, 0);
             sound->voice1_offset += 5;
@@ -69,6 +72,7 @@ void play_sound(Sound* sound)
     }
 
     // Voice 2
+    // printf("voice2_offset: %lx\n", sound->voice2_offset);
     if (sound->voice2_duration <= 0) {
         for (i = 0; i < 5; i++) {
             // bytes[i] = read_bank_data(SOUND_BANK, sound->voice2_offset + i);
@@ -79,8 +83,7 @@ void play_sound(Sound* sound)
             freq_divisor = ((bytes[2] & 0x3F) << 4) + (bytes[3] & 0x0F);
             frequency = (111860 / freq_divisor) + 1;
             volume = volumes[(bytes[4] & 0x0F) >> 1];
-            printf("bytes: %x %x %x %x %x\n", bytes[0], bytes[1], bytes[2], bytes[3], bytes[4]);
-            printf("Voice 2: %lu %u %u\n", freq_divisor, sound->voice2_duration, volume);
+
             psg_setfreq(frequency, 1);
             psg_setvol(volume, 1);
             sound->voice2_offset += 5;

@@ -81,18 +81,18 @@ int main()
     init_screen();
 
     // Initialize the PSG
-    psg_init();
+    //psg_init();
 
-    load_resource(picdir, 1);
-    // //load_file("testpics/test.pic");
+    // load_resource(picdir, 1);
+    // // //load_file("testpics/test.pic");
 
-    start_stopwatch();
-    draw_pic();
-    end_stopwatch();
-    show_pic();
+    // start_stopwatch();
+    // draw_pic();
+    // end_stopwatch();
+    // show_pic();
 
-    // load_resource(snddir, 65);
-    // sound = create_sound(get_last_entry(snddir_head)->offset);
+    //load_resource(snddir, 65);
+    //sound = create_sound(get_last_entry(snddir_head)->offset);
 
     // while (!kbhit()) {
     //     asm_wait_for_refresh(); // todo: this is done in the interpreter loop normally
@@ -100,11 +100,11 @@ int main()
     // }
 
     // Turn off all voices by setting volumes to 0
-    psg_setvol(0, 0);
-    psg_setvol(0, 1);
-    psg_setvol(0, 2);
+    // psg_setvol(0, 0);
+    // psg_setvol(0, 1);
+    // psg_setvol(0, 2);
 
-    display_text(0, 0, "1234567890. The quick brown fox jumps over the lazy dog.");
+    //display_text(0, 0, "1234567890. The quick brown fox jumps over the lazy dog.");
 
     asm_clear_overlay();
     // display_text(0,0,"Some more text.");

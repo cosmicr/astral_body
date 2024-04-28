@@ -25,7 +25,7 @@ extern dir_entry_t* picdir_head;
 extern dir_entry_t* viewdir_head;
 extern dir_entry_t* snddir_head;
 
-uint8_t read_heap(uint32_t offset);
+volatile uint8_t read_heap(uint32_t offset);
 void write_heap(uint32_t offset, uint8_t data);
 uint32_t load_file(char* filename);
 void init_resources(void);

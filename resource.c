@@ -23,7 +23,7 @@ dir_entry_t* snddir_head;
 
 /* MEMORY ROUTINES */
 
-uint8_t read_heap(uint32_t offset)
+volatile uint8_t read_heap(uint32_t offset)
 {
     RAM_BANK = 1 + (offset >> 13);
     return *((volatile uint8_t*)(BANK_RAM + (offset & 0x1FFF)));

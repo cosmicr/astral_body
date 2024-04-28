@@ -64,9 +64,9 @@ void psg_setfreq(uint16_t freq, uint8_t voice)
     OLD_BANK = ROM_BANK;
     ROM_BANK = 0x0A;
 
-    __asm__("lda %v", A);
-    __asm__("ldx %v", X);
-    __asm__("ldy %v", Y);
+    asm("lda %v", A);
+    asm("ldx %v", X);
+    asm("ldy %v", Y);;
 
     __asm__("jsr $C057");
 
